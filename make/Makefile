@@ -34,7 +34,7 @@
 ##  LINKDIR      Linked Copies of TINKER Executables
 ##  FFTWDIR      FFTW Distribution Directory
 
-TINKERDIR = $(HOME)/tinker
+TINKERDIR = $(HOME)/WORK/Git/tinker
 BINDIR = $(TINKERDIR)/bin
 LINKDIR = /usr/local/bin
 

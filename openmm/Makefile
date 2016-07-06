@@ -40,7 +40,7 @@
 ##  FFTWDIR      FFTW Distribution Directory
 ##  OPENMMDIR    OpenMM Distribution Directory
 
-TINKERDIR = $(HOME)/tinker
+TINKERDIR = $(HOME)/WORK/Git/tinker
 BINDIR = $(TINKERDIR)/bin
 LINKDIR = /usr/local/bin
 
@@ -48,7 +48,7 @@ FFTWDIR = $(TINKERDIR)/fftw
 FFTW_LIB_DIR = -L$(FFTWDIR)/lib
 FFTW_LIBS = -lfftw3_threads -lfftw3
 
-OPENMMDIR = /usr/local/openmm
+OPENMMDIR = /home/richard/WORK/OpenMM7.0
 OPENMM_LIB_DIR = -L$(OPENMMDIR)/lib
 OPENMM_INCLUDE_DIR = $(OPENMMDIR)/include
 OPENMM_LIBS = -lOpenMM -lOpenMMAmoeba
