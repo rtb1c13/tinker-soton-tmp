@@ -4727,4 +4727,20 @@ int openmm_test_ (void) {
    OpenMM_Integrator_destroy (integrator);
    OpenMM_System_destroy (system);
 }
+void openmm_serialize_(void** omm) {
+    OpenMMData* ommHandle = (OpenMMData*) (*omm);
+
+    char *stuff;
+
+    FILE *f = fopen("system.xml", "w");
+
+    stuff = OpenMM_XmlSerializer_serializeSystem(ommHandle->system);
+
+    fputs(stuff, f);
+    fputs("\n", f);
+
+    // We need to free the serialized content and close the file
+    free(stuff);
+    fclose(f);
+}
 }
