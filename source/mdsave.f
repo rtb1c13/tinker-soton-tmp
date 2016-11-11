@@ -37,13 +37,14 @@ c
       use socket
       use titles
       use units
+      use usage
       implicit none
-      integer i,j,k,istep
-      integer ixyz,iind
+      integer i,j,k,l,istep,xyzwrite
+      integer ixyz,iind,iindxyz
       integer ivel,ifrc
       integer iend,idump,lext
       integer freeunit,trimtext
-      integer moddump
+      integer moddump,xyzdump
       real*8 dt,epot,eksum
       real*8 pico,wt
       logical exist
@@ -53,6 +54,7 @@ c
       character*120 velfile
       character*120 frcfile
       character*120 indfile
+      character*120 indxyzf
 c
 c
 c     send data via external socket communication if desired
@@ -64,6 +66,11 @@ c
       moddump = mod(istep,iwrite)
       if (moddump .ne. 0)  return
 c
+c     Coords written out 5000x less often than dipoles
+c 
+      xyzwrite = iwrite*5000
+      xyzdump = mod(istep,xyzwrite)
+c
 c     get the sequence number of the current trajectory frame
 c
       idump = nprior + istep/iwrite
@@ -71,85 +78,87 @@ c
       call numeral (idump,ext,lext)
 c
 c     print header for the instantaneous values at current step
-c
-      pico = dble(istep) * dt
-      write (iout,10)  istep
-   10 format (/,' Instantaneous Values for Frame Saved at',
-     &           i10,' Dynamics Steps')
+c     (RTB - only if printing out coords)
+      if (xyzdump .eq. 0) then
+         pico = dble(istep) * dt
+         write (iout,10)  istep
+   10    format (/,' Instantaneous Values for Frame Saved at',
+     &              i10,' Dynamics Steps')
 c
 c     print the current time, potential and kinetic energies
 c
-      if (digits .ge. 8) then
-         write (iout,20)  pico
-   20    format (/,' Current Time',8x,f19.8,' Picosecond')
-         write (iout,30)  epot
-   30    format (' Current Potential',3x,f19.8,' Kcal/mole')
-         write (iout,40)  eksum
-   40    format (' Current Kinetic',5x,f19.8,' Kcal/mole')
-      else if (digits .ge. 6) then
-         write (iout,50)  pico
-   50    format (/,' Current Time',8x,f17.6,' Picosecond')
-         write (iout,60)  epot
-   60    format (' Current Potential',3x,f17.6,' Kcal/mole')
-         write (iout,70)  eksum
-   70    format (' Current Kinetic',5x,f17.6,' Kcal/mole')
-      else
-         write (iout,80)  pico
-   80    format (/,' Current Time',8x,f15.4,' Picosecond')
-         write (iout,90)  epot
-   90    format (' Current Potential',3x,f15.4,' Kcal/mole')
-         write (iout,100)  eksum
-  100    format (' Current Kinetic',5x,f15.4,' Kcal/mole')
-      end if
+         if (digits .ge. 8) then
+            write (iout,20)  pico
+   20       format (/,' Current Time',8x,f19.8,' Picosecond')
+            write (iout,30)  epot
+   30       format (' Current Potential',3x,f19.8,' Kcal/mole')
+            write (iout,40)  eksum
+   40       format (' Current Kinetic',5x,f19.8,' Kcal/mole')
+         else if (digits .ge. 6) then
+            write (iout,50)  pico
+   50       format (/,' Current Time',8x,f17.6,' Picosecond')
+            write (iout,60)  epot
+   60       format (' Current Potential',3x,f17.6,' Kcal/mole')
+            write (iout,70)  eksum
+   70       format (' Current Kinetic',5x,f17.6,' Kcal/mole')
+         else
+            write (iout,80)  pico
+   80       format (/,' Current Time',8x,f15.4,' Picosecond')
+            write (iout,90)  epot
+   90       format (' Current Potential',3x,f15.4,' Kcal/mole')
+            write (iout,100)  eksum
+  100       format (' Current Kinetic',5x,f15.4,' Kcal/mole')
+         end if
 c
 c     print the values of the lattice lengths and angles
 c
-      if (use_bounds) then
-         if (digits .le. 6) then
-            write (iout,110)  xbox,ybox,zbox
-  110       format (' Lattice Lengths',6x,3f14.6)
-            write (iout,120)  alpha,beta,gamma
-  120       format (' Lattice Angles',7x,3f14.6)
-         else if (digits .le. 8) then
-            write (iout,130)  xbox,ybox,zbox
-  130       format (' Lattice Lengths',6x,3f16.8)
-            write (iout,140)  alpha,beta,gamma
-  140       format (' Lattice Angles',7x,3f16.8)
-         else
-            write (iout,150)  xbox,ybox,zbox
-  150       format (' Lattice Lengths',6x,3f18.10)
-            write (iout,160)  alpha,beta,gamma
-  160       format (' Lattice Angles',7x,3f18.10)
+         if (use_bounds) then
+            if (digits .le. 6) then
+               write (iout,110)  xbox,ybox,zbox
+  110          format (' Lattice Lengths',6x,3f14.6)
+               write (iout,120)  alpha,beta,gamma
+  120          format (' Lattice Angles',7x,3f14.6)
+            else if (digits .le. 8) then
+               write (iout,130)  xbox,ybox,zbox
+  130          format (' Lattice Lengths',6x,3f16.8)
+               write (iout,140)  alpha,beta,gamma
+  140          format (' Lattice Angles',7x,3f16.8)
+            else
+               write (iout,150)  xbox,ybox,zbox
+  150          format (' Lattice Lengths',6x,3f18.10)
+               write (iout,160)  alpha,beta,gamma
+  160          format (' Lattice Angles',7x,3f18.10)
+            end if
          end if
-      end if
 c
 c     save coordinates to an archive or numbered structure file
 c
-      ixyz = freeunit ()
-      if (archive) then
-         xyzfile = filename(1:leng)
-         call suffix (xyzfile,'arc','old')
-         inquire (file=xyzfile,exist=exist)
-         if (exist) then
-            call openend (ixyz,xyzfile)
+         ixyz = freeunit ()
+         if (archive) then
+            xyzfile = filename(1:leng)
+            call suffix (xyzfile,'arc','old')
+            inquire (file=xyzfile,exist=exist)
+            if (exist) then
+               call openend (ixyz,xyzfile)
+            else
+               open (unit=ixyz,file=xyzfile,status='new')
+            end if
          else
+            xyzfile = filename(1:leng)//'.'//ext(1:lext)
+            call version (xyzfile,'new')
             open (unit=ixyz,file=xyzfile,status='new')
          end if
-      else
-         xyzfile = filename(1:leng)//'.'//ext(1:lext)
-         call version (xyzfile,'new')
-         open (unit=ixyz,file=xyzfile,status='new')
-      end if
-      call prtxyz (ixyz)
-      close (unit=ixyz)
-      write (iout,170)  idump
-  170 format (' Frame Number',13x,i10)
-      write (iout,180)  xyzfile(1:trimtext(xyzfile))
-  180 format (' Coordinate File',12x,a)
+         call prtxyz (ixyz)
+         close (unit=ixyz)
+         write (iout,170)  idump
+  170    format (' Frame Number',13x,i10)
+         write (iout,180)  xyzfile(1:trimtext(xyzfile))
+  180    format (' Coordinate File',12x,a)
 c
 c     update the information needed to restart the trajectory
 c
-      call prtdyn
+         call prtdyn
+      end if
 c
 c     save the velocity vector components at the current step
 c
@@ -222,35 +231,45 @@ c
       end if
 c
 c     save the current induced dipole moment at each site
+c     and xyz coords of atoms chosen for dipole saving
 c
       if (uindsave .and. use_polar) then
-         iind = freeunit ()
          if (archive) then
             indfile = filename(1:leng)
+            indxyzf = filename(1:leng)
             call suffix (indfile,'uind','old')
+            call suffix (indxyzf,'uindxyz','old')
+            iind = freeunit ()
             inquire (file=indfile,exist=exist)
             if (exist) then
                call openend (iind,indfile)
             else
                open (unit=iind,file=indfile,status='new')
             end if
+            iindxyz = freeunit ()
+            inquire (file=indxyzf,exist=exist)
+            if (exist) then
+               call openend (iindxyz,indxyzf)
+            else
+               open (unit=iindxyz,file=indxyzf,status='new')
+            end if
          else
             indfile = filename(1:leng)//'.'//ext(1:lext)//'u'
+            indxyzf = filename(1:leng)//'.'//ext(1:lext)//'uxyz'
+            iind = freeunit ()
             call version (indfile,'new')
             open (unit=iind,file=indfile,status='new')
+            iindxyz = freeunit ()
+            call version (indxyzf,'new')
+            open (unit=iindxyz,file=indxyzf,status='new')
          end if
-         write (iind,280)  n,title(1:ltitle)
-  280    format (i6,2x,a)
-         do i = 1, npole
-            if (polarity(i) .ne. 0.0d0) then
-               k = ipole(i)
-               write (iind,290)  k,name(k),(debye*uind(j,i),j=1,3)
-  290          format (i6,2x,a3,3f12.6)
-            end if
-         end do
+         call prtuxyz (iind,iindxyz)
          close (unit=iind)
-         write (iout,300)  indfile(1:trimtext(indfile))
-  300    format (' Induced Dipole File',10x,a)
+         close (unit=iindxyz)
+         if (xyzdump .eq. 0) then
+            write (iout,280)  indfile(1:trimtext(indfile))
+  280       format (' Induced Dipole File',10x,a)
+         end if
       end if
 c
 c     test for requested termination of the dynamics calculation

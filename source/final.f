@@ -779,6 +779,8 @@ c     deallocation of global arrays from module usage
 c
       if (allocated(iuse))  deallocate (iuse)
       if (allocated(use))  deallocate (use)
+      if (allocated(iprt))  deallocate (iprt)
+      if (allocated(prtind))  deallocate (prtind)
 c
 c     deallocation of global arrays from module usolve
 c

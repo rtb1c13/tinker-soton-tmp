@@ -48,7 +48,7 @@ FFTWDIR = $(TINKERDIR)/fftw
 FFTW_LIB_DIR = -L$(FFTWDIR)/lib
 FFTW_LIBS = -lfftw3_threads -lfftw3
 
-OPENMMDIR = /home/richard/WORK/OpenMM7.0
+OPENMMDIR = /home/richard/WORK/OpenMM7.0+tinker
 OPENMM_LIB_DIR = -L$(OPENMMDIR)/lib
 OPENMM_INCLUDE_DIR = $(OPENMMDIR)/include
 OPENMM_LIBS = -lOpenMM -lOpenMMAmoeba

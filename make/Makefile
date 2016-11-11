@@ -68,6 +68,7 @@ F77 = gfortran
 LIBS = -lstdc++
 F77FLAGS = -c
 OPTFLAGS = -O3 -march=native -ffast-math -funroll-loops -fopenmp
+#OPTFLAGS = -g -march=native -ffast-math -funroll-loops -fopenmp
 LIBFLAGS = -crusv
 RANLIB = ranlib -c
 LINKFLAGS = $(OPTFLAGS) -static-libgcc
@@ -541,6 +542,7 @@ OBJS = action.o \
        prtpdb.o \
        prtprm.o \
        prtseq.o \
+       prtuxyz.o \
        prtxyz.o \
        pss.o \
        pssrigid.o \
@@ -728,7 +730,8 @@ EXEFILES = alchemy.x \
 	${CC} ${CFLAGS} ${INCLUDEDIR} ${OPTFLAGS} $<
 
 %.x: %.o libtinker.a
-	${F77} ${LINKFLAGS} ${FFTW_LIB_DIR} -o $@ $^ ${LIBS} ${FFTW_LIBS}; strip $@
+#	${F77} ${LINKFLAGS} ${FFTW_LIB_DIR} -o $@ $^ ${LIBS} ${FFTW_LIBS}; strip $@
+	${F77} ${LINKFLAGS} ${FFTW_LIB_DIR} -o $@ $^ ${LIBS} ${FFTW_LIBS}
 
 all:	${EXEFILES}
 
@@ -1309,6 +1312,7 @@ libtinker.a: ${OBJS}
         prtpdb.o \
         prtprm.o \
         prtseq.o \
+        prtuxyz.o \
         prtxyz.o \
         ptable.o \
         qmstuf.o \
@@ -1812,6 +1816,7 @@ prtmol2.o: atomid.o atoms.o bndstr.o couple.o files.o iounit.o sizes.o titles.o
 prtpdb.o: files.o pdb.o sequen.o sizes.o titles.o
 prtprm.o: angpot.o bndpot.o chgpot.o fields.o kanang.o kangs.o kantor.o katoms.o kbonds.o kchrge.o kdipol.o khbond.o kiprop.o kitors.o kmulti.o kopbnd.o kopdst.o korbs.o kpitor.o kpolr.o kstbnd.o ksttor.o ktorsn.o ktrtor.o kurybr.o kvdwpr.o kvdws.o mplpot.o polpot.o sizes.o urypot.o vdwpot.o
 prtseq.o: files.o sequen.o sizes.o
+prtuxyz.o: atomid.o atoms.o couple.o files.o inform.o mpole.o polar.o sizes.o titles.o units.o usage.o
 prtxyz.o: atomid.o atoms.o bound.o boxes.o couple.o files.o inform.o sizes.o titles.o
 pss.o: atoms.o files.o hescut.o inform.o iounit.o math.o omega.o refer.o sizes.o tree.o warp.o zcoord.o
 pssrigid.o: atoms.o files.o group.o inform.o iounit.o math.o minima.o molcul.o refer.o rigid.o sizes.o warp.o

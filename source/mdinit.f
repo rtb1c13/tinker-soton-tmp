@@ -51,6 +51,8 @@ c
       integer idyn,nh
       integer size,next
       integer lext,freeunit
+      integer nuind
+      integer, allocatable :: uindatm(:)
       real*8 e,ekt,qterm
       real*8 maxwell,speed
       real*8 amass,gmass
@@ -65,6 +67,26 @@ c
       character*120 record
       character*120 string
 c
+c     Perform dynamic allocation of local array
+c
+      allocate (uindatm(n))
+c     Allocate global arrays and set some defaults
+      if (allocated(iprt))  deallocate (iprt)
+      if (allocated(prtind))  deallocate (prtind)
+      allocate (iprt(n))
+      allocate (prtind(0:n))
+c
+c     Set some defaults
+c
+      nprt = n
+      prtind(0) = .false.
+      do i = 1, n
+         prtind(i) = .true.
+      end do
+      nuind = 0
+      do i = 1, n
+         uindatm(i) = 0
+      end do
 c
 c     set default parameters for the dynamics trajectory
 c
@@ -129,6 +151,12 @@ c
             frcsave = .true.
          else if (keyword(1:13) .eq. 'SAVE-INDUCED ') then
             uindsave = .true.
+            read (string,*,err=9,end=9)  (uindatm(j),j=nuind+1,n)
+    9       continue
+            do while (uindatm(nuind+1) .ne. 0)
+               nuind = nuind + 1
+               uindatm(nuind) = max(-n,min(n,uindatm(nuind)))
+            end do
          else if (keyword(1:9) .eq. 'FRICTION ') then
             read (string,*,err=10,end=10)  friction
          else if (keyword(1:17) .eq. 'FRICTION-SCALING ') then
@@ -165,6 +193,61 @@ c
          end if
    10    continue
       end do
+c
+c     Do uind printing processing if needed
+c
+      if (uindsave) then
+c
+c     Set atoms to save uind of (similarly to active.f)
+c
+         i = 1
+         do while (uindatm(i) .ne. 0)
+            if (i .eq. 1) then
+               nprt = 0
+               do j = 1, n
+                  prtind(j) = .false.
+               end do
+            end if
+            if (uindatm(i) .gt. 0) then
+               j = uindatm(i)
+               if (.not. prtind(j)) then
+                  prtind(j) = .true.
+                  nprt = nprt + 1
+               end if
+               i = i + 1
+            else
+               do j = abs(uindatm(i)), abs(uindatm(i+1))
+                  if (.not. prtind(j)) then
+                     prtind(j) = .true.
+                     nprt = nprt + 1
+                  end if
+               end do
+               i = i + 2
+            end if
+         end do
+c
+c     use logical array to set the list of printed atoms
+c
+         j = 0
+         do i = 1, n
+            if (prtind(i)) then
+               j = j + 1
+               iprt(j) = i
+            end if
+         end do
+c
+c     output the final list of the printed atoms
+c
+         if (debug .and. nprt.gt.0 .and. nprt.lt.n) then
+            write (iout,15)
+   15       format (/,' List of Atoms for Dipole',
+     &                 ' Printing :',/)
+            write (iout,16)  (iprt(i),i=1,nprt)
+   16       format (3x,10i7)
+         end if
+      deallocate (uindatm)
+      end if
+
 c
 c     repartition hydrogen masses to allow long time steps
 c
