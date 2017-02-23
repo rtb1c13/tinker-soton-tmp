@@ -210,7 +210,8 @@ c
 c
 c     make the call to compute the potential energy
 c
-         if (doenergy .or. doatom .or. dolarge)  call enrgyze
+         if (doenergy .or. doatom 
+     &       .or. dolarge .or. dodipole)  call enrgyze
 c
 c     energy partitioning by potential energy components
 c
