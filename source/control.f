@@ -35,6 +35,7 @@ c
       abort = .false.
       verbose = .false.
       debug = .false.
+      dipdebug = .false.
       holdup = .false.
       archive = .false.
       noversion = .false.

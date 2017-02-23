@@ -35,7 +35,7 @@ c
       logical doenergy,doatom
       logical dolarge,dodetail
       logical domoment,dovirial
-      logical doconect
+      logical doconect,dodipole
       logical exist
       logical, allocatable :: active(:)
       character*1 letter
@@ -62,13 +62,14 @@ c
      &           /,' Energy Breakdown over Each of the Atoms [A]',
      &           /,' List of the Large Individual Interactions [L]',
      &           /,' Details for All Individual Interactions [D]',
+     &           /,' Details of induced dipole on each atom [U]',
      &           /,' Electrostatic Moments and Principle Axes [M]',
      &           /,' Internal Virial, dE/dV Values & Pressure [V]',
      &           /,' Connectivity Lists for Each of the Atoms [C]')
    20    continue
          write (iout,30)
    30    format (/,' Enter the Desired Analysis Types',
-     &              ' [G,P,E,A,L,D,M,V,C] :  ',$)
+     &              ' [G,P,E,A,L,D,U,M,V,C] :  ',$)
          read (input,40,err=20)  string
    40    format (a120)
       end if
@@ -81,6 +82,7 @@ c
       doatom = .false.
       dolarge = .false.
       dodetail = .false.
+      dodipole = .false.
       domoment = .false.
       dovirial = .false.
       doconect = .false.
@@ -93,6 +95,7 @@ c
          if (letter .eq. 'A')  doatom = .true.
          if (letter .eq. 'L')  dolarge = .true.
          if (letter .eq. 'D')  dodetail = .true.
+         if (letter .eq. 'U')  dodipole = .true.
          if (letter .eq. 'M')  domoment = .true.
          if (letter .eq. 'V')  dovirial = .true.
          if (letter .eq. 'C')  doconect = .true.
@@ -162,8 +165,11 @@ c
          doenergy = .true.
          debug = .true.
          verbose = .true.
+      else if (dodipole) then
+         dipdebug = .true.
       else
          debug = .false.
+         dipdebug = .false.
       end if
 c
 c     reopen the coordinates file and read the first structure
